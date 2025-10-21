@@ -1,0 +1,71 @@
+
+  You are an expert in Python, Bash, and social web integrations.
+
+  Key Principles
+  - Write clear, technical responses with precise python/bash examples.
+  - Use native python libraries wherever possible to minimize dependencies.
+  - Prioritize readability and maintainability; follow PEP 8 compliance.
+  - Use descriptive variable and function names; adhere to naming conventions (e.g., lowercase with underscores for functions and variables).
+  - Structure your project in a modular way to promote reusability and separation of concerns.
+  - Use bash scripts to handle CLI interactions and provide clear usage instructions.
+  - Use SOLID design principles, DRY, and KISS.
+
+  Error Handling and Validation
+  - Implement a modular error handling system with concise messaging and logging.
+  - Use try-except blocks for handling exceptions in business logic.
+  - Use logging to log errors and exceptions.
+
+  Performance Optimization
+  - Use def for pure functions and async def for asynchronous operations.
+
+  Key Conventions
+  - Prioritize security and performance optimization in every stage of development.
+  - Maintain a clear and logical project structure to enhance readability and maintainability.
+  
+Create a Python-based CLI tool called `shellcaster` that lets me publish a message to multiple social media platforms with one command.
+
+The tool should:
+1. Accept the post content as either file name or a string of text.
+    - If a file name is provided, accept only markdown files and read the file and use its contents as the post content.
+    - If a string of text is provided, use it as the post content.
+2. Support posting to Facebook Pages (via Graph API), LinkedIn (via v2 API), X (Twitter via API v1.1), and Blogger (API v3).
+3. Each platform should have it's own module
+4. Read each platform’s access tokens or credentials from a `.env` file. Set these inside the module.
+5. Include clear helper functions for each platform:
+   - Facebook: POST to `/{page-id}/feed` with `access_token`.
+   - LinkedIn: POST to `ugcPosts` using `Bearer {token}`.
+   - X: Use OAuth 1.0a (support `consumer_key`, `consumer_secret`, `access_token`, `access_token_secret`).
+   - Blogger: Use OAuth 2.0; assume blog ID is known in config.
+6. Print success or failure for each platform after attempting to post.
+7. Use color coding in the terminal output to indicate success or failure.
+
+Make sure the tool is easy to extend, supports logging, and can be run like this: (note if no --platform parameter is provided, all platforms are used)
+```bash
+python shellcaster.py --post "Hello from CLI"
+
+python shellcaster.py --post "Hello from CLI" --platform facebook
+
+python shellcaster.py --post "Hello from CLI" --platform linkedin
+
+python shellcaster.py --post "Hello from CLI" --platform x
+
+python shellcaster.py --post "Hello from CLI" --platform blogger
+
+python shellcaster.py --post "Hello from CLI" --platform facebook,linkedin,x,blogger
+
+python shellcaster.py --platform facebook,linkedin,x,blogger --file "post.md"
+
+example post.md: 
+```markdown
+
+# 💥 New Recon Tool Released: Shellcaster CLI
+
+Just dropped a new open-source CLI tool for bug bounty hunters and ethical hackers.  
+Shellcaster lets you broadcast to **Facebook**, **LinkedIn**, **X**, and **Blogger** — all from your terminal.  
+Designed for speed, stealth, and seamless automation.
+
+![Shellcaster Screenshot](https://example.com/images/shellcaster-demo.png)
+
+Check it out here: [GitHub Repo](https://github.com/yourname/shellcaster-cli)
+
+#HackerTools #BugBounty #OSINT #CyberSecurity

@@ -1,0 +1,12 @@
+requests
+python-dotenv
+python-dateutil
+markdown
+beautifulsoup4
+google-auth-oauthlib>=1.0.0
+google-auth-httplib2>=0.1.0
+google-api-python-client>=2.0.0
+requests-oauthlib
+markdown>=3.4.0
+pytrends
+google-generativeai
