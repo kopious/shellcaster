@@ -276,9 +276,43 @@ def compose_social_message(topic: str, url: str) -> str:
     return f"{base}\n{tags}"
 
 
-def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, str]:
-    """Use Gemini to identify current trending crypto topics and return (raw_text, top_topic).
-    We print the full structured response, and choose the first listed topic as the top topic.
+def select_topic_interactively(candidates: List[str], default_index: int = 0) -> str:
+    """Prompt user to select a topic from candidates list.
+    
+    Args:
+        candidates: List of topic segments to choose from
+        default_index: Index of default topic if user doesn't select (default: 0)
+    
+    Returns:
+        Selected topic string
+    """
+    if not candidates:
+        return ''
+    
+    selected_topic = candidates[default_index] if default_index < len(candidates) else candidates[0]
+    
+    # Interactive selection: only prompt when stdin is a TTY
+    if sys.stdin and sys.stdin.isatty():
+        print('\n[workflow] Select a topic by number (press Enter to use the default):')
+
+        try:
+            choice = input('Enter topic number: ').strip()
+            if choice:
+                num = int(choice)
+                if 1 <= num <= len(candidates):
+                    selected_topic = candidates[num - 1]
+        except Exception:
+            pass
+    
+    return selected_topic
+
+
+def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, List[str]]:
+    """Use Gemini to identify current trending crypto topics and return (top_topic, candidates).
+    We print the full structured response and parse topic segments.
+    
+    Returns:
+        Tuple of (default_top_topic, list_of_candidate_segments)
     """
     api_key = get_env('GEMINI_API_KEY')
     if not api_key:
@@ -356,21 +390,7 @@ def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, str]:
             # Remove leading bold markers and numbering, handling '**N.**' or '**N.'
             candidates.append(seg)
 
-    # Interactive selection: only prompt when stdin is a TTY
-    if candidates and sys.stdin and sys.stdin.isatty():
-        print('\n[workflow] Select a topic by number (press Enter to use the default):')
-        for idx, name in enumerate(candidates, start=1):
-            print(f"{name}")
-        try:
-            choice = input('Enter topic number: ').strip()
-            if choice:
-                num = int(choice)
-                if 1 <= num <= len(candidates):
-                    top_topic = candidates[num - 1]
-        except Exception:
-            pass
-
-    return top_topic
+    return top_topic, candidates
 
 
 def main():
@@ -378,12 +398,16 @@ def main():
 
     # Step 1: Use Gemini to identify trending topics (last 72h) and print them
     try:
-        top_topic = identify_trending_with_gemini(window_hours=72)
+        default_topic, candidates = identify_trending_with_gemini(window_hours=72)
     except Exception as e:
         print(f"[workflow] Trend identification failed: {e}")
         sys.exit(1)
-    # print('[workflow] Trending topics (from Gemini):')
-    # print(trends_text)
+    
+    # Step 1a: Allow user to select topic interactively
+    top_topic = select_topic_interactively(candidates, default_index=0)
+    if not top_topic:
+        top_topic = default_topic
+    
     print(f"[workflow] Selected top topic: {top_topic}")
  
     # Step 2: Generate blog post with Gemini using post.md as template
