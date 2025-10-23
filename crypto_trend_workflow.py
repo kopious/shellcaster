@@ -242,7 +242,12 @@ def compose_social_message(topic: str, url: str) -> str:
     md = topic or ''
     title = ''
     summary = ''
-    for line in md.splitlines():
+    hashtags = ''
+    
+    lines = md.splitlines()
+    
+    # Extract title and summary
+    for line in lines:
         if not title and line.startswith('# '):
             title = line.lstrip('# ').strip()
             continue
@@ -252,28 +257,35 @@ def compose_social_message(topic: str, url: str) -> str:
         if title and summary:
             break
 
+    # Extract hashtags from the last non-empty line
+    for line in reversed(lines):
+        stripped = line.strip()
+        if stripped:
+            # Check if line contains hashtags
+            if '#' in stripped:
+                hashtags = stripped
+            break
+
     # Fallbacks if parsing fails
     if not title:
         title = 'New Article'
     if not summary:
         # Try to derive a short snippet from the first non-empty paragraph after title
-        lines = [l for l in md.splitlines() if l.strip()]
-        if lines:
+        non_empty_lines = [l for l in lines if l.strip()]
+        if non_empty_lines:
             # Prefer a non-heading, non-image line
-            for l in lines:
+            for l in non_empty_lines:
                 if not l.startswith('#') and not l.startswith('!['):
                     summary = l.strip()
                     break
         summary = summary or 'Read the latest insights.'
-
+    
     snippet = summary[:60].rstrip()
     if len(summary) > 60:
         snippet += '…'
 
     base = f"{title} — {snippet} {url}".strip()
-    chosen = random.sample(HASHTAGS, k=min(3, len(HASHTAGS)))
-    tags = ' '.join(chosen)
-    return f"{base}\n{tags}"
+    return f"{base}\n{hashtags}"
 
 
 def post_to_social_platforms(message: str, platforms: str = 'x,facebook,linkedin') -> bool:
