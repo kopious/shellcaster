@@ -333,9 +333,13 @@ def select_topic_interactively(candidates: List[str], default_index: int = 0) ->
     return selected_topic
 
 
-def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, List[str]]:
-    """Use Gemini to identify current trending crypto topics and return (top_topic, candidates).
+def identify_trending_with_gemini(window_hours: int = 72, topic: str = None) -> Tuple[str, List[str]]:
+    """Use Gemini to identify current trending topics and return (top_topic, candidates).
     We print the full structured response and parse topic segments.
+    
+    Args:
+        window_hours: Time window in hours to search for trends (default: 72)
+        topic: Optional user-provided topic domain. If None, defaults to cryptocurrency topics.
     
     Returns:
         Tuple of (default_top_topic, list_of_candidate_segments)
@@ -346,10 +350,13 @@ def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, List[str
 
     genai.configure(api_key=api_key)
 
+    if not topic:
+        topic = 'cryptocurrency'
+
     prompt = (
-        "Identify current trending cryptocurrency topics. Use sources from the last "
-        f"{window_hours} hours, including crypto news outlets, major social media platforms, and on-chain analytics. "
-        "Present the information in a brief, and easy-to-read, structured markdown format with clear bullets and each Segment must include bold-numbered headers like **1., **2., **n."        
+        f"Identify current trending topics related to: {topic}. "
+        f"Use sources from the last {window_hours} hours, including news outlets, major social media platforms, and relevant analytics. "
+        "Present the information in a brief, and easy-to-read, structured markdown format with clear bullets and each Segment must include bold-numbered headers like **1., **2., **n."
     )
 
     # Reuse model fallback
@@ -376,11 +383,19 @@ def identify_trending_with_gemini(window_hours: int = 72) -> Tuple[str, List[str
     text = try_generate(prompt)
     if not text:
         time.sleep(1)
-        lighter = (
-            "List trending cryptocurrency topics from the last 72 hours in markdown.\n"
-            "For each: a title, a 1-2 sentence why-it's-trending, and 3-6 related keywords/projects.\n"
-            "End with: 'Strongest Blog Post Recommendation: <topic>'. Avoid financial advice."
-        )
+        # Fallback prompt
+        if topic:
+            lighter = (
+                f"List trending topics related to {topic} from the last {window_hours} hours in markdown.\n"
+                "For each: a title, a 1-2 sentence why-it's-trending, and 3-6 related keywords.\n"
+                "End with: 'Strongest Blog Post Recommendation: <topic>'."
+            )
+        else:
+            lighter = (
+                "List trending cryptocurrency topics from the last 72 hours in markdown.\n"
+                "For each: a title, a 1-2 sentence why-it's-trending, and 3-6 related keywords/projects.\n"
+                "End with: 'Strongest Blog Post Recommendation: <topic>'. Avoid financial advice."
+            )
         text = try_generate(lighter)
     if not text:
         raise RuntimeError('Gemini trend identification returned empty content')
