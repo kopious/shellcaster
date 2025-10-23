@@ -276,6 +276,32 @@ def compose_social_message(topic: str, url: str) -> str:
     return f"{base}\n{tags}"
 
 
+def post_to_social_platforms(message: str, platforms: str = 'x,facebook,linkedin') -> bool:
+    """Execute shellcaster CLI to post message to social platforms.
+    
+    Args:
+        message: The message content to post
+        platforms: Comma-separated list of platforms (e.g., 'x,facebook,linkedin')
+    
+    Returns:
+        True if posting succeeded, False otherwise
+    """
+    cmd = [
+        sys.executable, 'shellcaster.py', '--post', message, '--platform', platforms
+    ]
+    try:
+        print(f'[workflow] Posting to social platforms via shellcaster: {platforms}...')
+        proc = subprocess.run(cmd, cwd=os.path.dirname(__file__), capture_output=True, text=True)
+        print(proc.stdout)
+        if proc.returncode != 0:
+            print(proc.stderr)
+            return False
+        return True
+    except Exception as e:
+        print(f"[workflow] Social posting failed: {e}")
+        return False
+
+
 def select_topic_interactively(candidates: List[str], default_index: int = 0) -> str:
     """Prompt user to select a topic from candidates list.
     
@@ -428,20 +454,7 @@ def main():
 
     # Step 6: Compose social message and post to X, Facebook, LinkedIn via shellcaster
     message = compose_social_message(blog_md, post_url or '')
-
-    # Use shellcaster CLI
-    
-    cmd = [
-        sys.executable, 'shellcaster.py', '--post', message, '--platform', 'x,facebook,linkedin'
-    ]
-    try:
-        print('[workflow] Posting to social platforms via shellcaster...')
-        proc = subprocess.run(cmd, cwd=os.path.dirname(__file__), capture_output=True, text=True)
-        print(proc.stdout)
-        if proc.returncode != 0:
-            print(proc.stderr)
-    except Exception as e:
-        print(f"[workflow] Social posting failed: {e}")
+    post_to_social_platforms(message, platforms='x,facebook,linkedin')
 
 
 if __name__ == '__main__':
