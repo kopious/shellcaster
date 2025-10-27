@@ -10,3 +10,4 @@ requests-oauthlib
 markdown>=3.4.0
 pytrends
 google-generativeai
+tweepy>=4.14

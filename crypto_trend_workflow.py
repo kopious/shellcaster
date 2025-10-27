@@ -5,6 +5,7 @@ import requests
 import time
 import re
 import subprocess
+import argparse
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -107,6 +108,11 @@ def generate_blog_with_gemini(topic: str, template_text: str, site_tone_hint: st
         f"- Use markdown only.\n"
         f"- Do not include financial advice.\n"
         f"- No placeholders; keep it factual and recent-context framed.\n"
+        f"- Use engaging captions & strong hooks\n"
+        f"- Ask direct, specific questions to spark comments.\n"
+        f"- Use a “hook” at the beginning of your caption (something that grabs attention) then deliver value.\n"
+        f"- Incorporate emojis, line breaks, and a clear voice to make it friendly and readable.\n"
+        f"- Include a call-to-action (CTA) when appropriate: e.g., \“Tag a friend who’d love this\”, \“What’s your take?\”, \“Save this for later\”.\n"
         f"Structure:\n"
         f"- Begin with a single H1 title line.\n"
         f"- Include a 1–3 sentence summary as a blockquote.\n"
@@ -449,9 +455,15 @@ def identify_trending_with_gemini(window_hours: int = 72, topic: str = None) -> 
 def main():
     load_env()
 
+    # Parse CLI arguments
+    parser = argparse.ArgumentParser(description='Generate and publish crypto blog posts based on trending topics')
+    parser.add_argument('--topic', type=str, default=None,
+                        help='Specify the topic domain to search for trends (default: cryptocurrency)')
+    args = parser.parse_args()
+
     # Step 1: Use Gemini to identify trending topics (last 72h) and print them
     try:
-        default_topic, candidates = identify_trending_with_gemini(window_hours=72)
+        default_topic, candidates = identify_trending_with_gemini(window_hours=72, topic=args.topic)
     except Exception as e:
         print(f"[workflow] Trend identification failed: {e}")
         sys.exit(1)
